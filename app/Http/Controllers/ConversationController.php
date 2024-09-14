@@ -49,7 +49,7 @@ class ConversationController extends Controller
                     ->where('receiver_id', $userId);
             })
             ->first();
-        $chat->sender_id = $request->receiver_id;
+        $chat->sender_id = $userId;
         $chat->conversation_id = $conversations->id;
         $chat->message = $request->message;
         $chat->save();
