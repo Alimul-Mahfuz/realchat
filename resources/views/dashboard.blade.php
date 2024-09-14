@@ -79,6 +79,7 @@
                 newMessage: '',
                 async selectUser(id, name) {
                     this.selectedUser = { id, name };
+                    console.log(id);
                     const baseUrl = `{{ route('get-chat', ['receiver_id' => ':id']) }}`;
                     const url = baseUrl.replace(':id', encodeURIComponent(id));
 
@@ -97,6 +98,7 @@
                     }
                 },
                 async sendMessage() {
+
                     if (!this.newMessage.trim()) return;
 
                     const url = `{{ route('send-message') }}`;
@@ -118,17 +120,18 @@
                         const data = await response.json();
 
                         if (data.status === 'success') {
-                            this.chats.push({
-                                id: data.message.id,
-                                sender_id: this.authUserId, // Set the sender ID to authenticated user
-                                message: this.newMessage
-                            });
+                            // this.chats.push({
+                            //     id: data.message.id,
+                            //     sender_id: this.authUserId, // Set the sender ID to authenticated user
+                            //     message: this.newMessage
+                            // });
+
 
                             this.newMessage = '';
 
-                            this.$nextTick(() => {
-                                this.$refs.messageThread.scrollTop = this.$refs.messageThread.scrollHeight;
-                            });
+                            // this.$nextTick(() => {
+                            //     this.$refs.messageThread.scrollTop = this.$refs.messageThread.scrollHeight;
+                            // });
                         }
                     } catch (error) {
                         console.error('Error sending message:', error);
