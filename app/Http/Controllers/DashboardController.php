@@ -8,7 +8,8 @@ use Illuminate\Http\Request;
 class DashboardController extends Controller
 {
     public function dashboard(){
-        $users=User::all();
+
+        $users=User::query()->where('id','!=',auth()->id())->get();
         return view('dashboard',compact('users'));
     }
 }
