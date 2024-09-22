@@ -25,6 +25,7 @@ class ConversationController extends Controller
             ->first();
         if ($conversations) {
             $chats = Chat::where('conversation_id', $conversations->id)->get();
+            Chat::query()->where('conversation_id',$conversations->id)->update(['is_read' => true]);
             $conversation_id=$conversations->id;
         } else {
             $chats = null;
@@ -35,6 +36,7 @@ class ConversationController extends Controller
             'status' => 'success',
             'chats' => $chats,
             'conversation_id'=>$conversation_id,
+            'is_read'=>true
         ]);
 
 

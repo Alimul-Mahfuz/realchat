@@ -40,14 +40,16 @@
                                                     <p :class="{'bg-blue-500 text-white': chat.sender_id === authUserId, 'bg-gray-200 text-gray-800': chat.sender_id !== authUserId}"
                                                        class="inline-block p-2 rounded-lg my-2">
                                                         <span x-text="chat.message"></span>
+                                                    <p  class="text-sm text-gray-500 mt-1"
+                                                      x-text="(chat.sender_id === authUserId && chat.is_read) ? 'Read' : ''"></p>
                                                     </p>
                                                 </div>
                                             </template>
                                         </div>
                                         <div class="mt-4 flex space-x-2">
-                                            <input type="text" x-model="newMessage" @keydown.enter="sendMessage"
-                                                   placeholder="Type a message..."
-                                                   class="w-full p-2 border border-gray-300 rounded-lg dark:bg-gray-800 dark:text-gray-200">
+                                            <textarea x-model="newMessage" @keydown.enter="sendMessage"
+                                                      placeholder="Type a message..."
+                                                      class="w-full p-2 border border-gray-300 rounded-lg dark:bg-gray-800 dark:text-gray-200"></textarea>
                                             <button @click="sendMessage"
                                                     class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-blue-700 dark:hover:bg-blue-800">
                                                 Send
@@ -120,7 +122,7 @@
                                     id: event.id,
                                     conversation_id: event.conversation_id,
                                     sender_id: event.sender_id,
-
+                                    is_read: event.is_read,
                                     message: event.message,
                                 });
                                 this.scrollToBottom();
