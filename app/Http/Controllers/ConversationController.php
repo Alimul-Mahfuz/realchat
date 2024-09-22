@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\NewMessageEvent;
 use App\Models\Chat;
 use App\Models\Conversation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 
 
 class ConversationController extends Controller
@@ -23,13 +25,16 @@ class ConversationController extends Controller
             ->first();
         if ($conversations) {
             $chats = Chat::where('conversation_id', $conversations->id)->get();
+            $conversation_id=$conversations->id;
         } else {
             $chats = null;
+            $conversation_id = null;
         }
 
         return response()->json([
             'status' => 'success',
             'chats' => $chats,
+            'conversation_id'=>$conversation_id,
         ]);
 
 
@@ -51,10 +56,17 @@ class ConversationController extends Controller
             ->first();
         $chat->sender_id = $userId;
         $chat->conversation_id = $conversations->id;
-        $chat->message = $request->message;
+        $chat->message = $request->input('message');
         $chat->save();
+        Event::dispatch(new NewMessageEvent($conversations,$chat));
         return response()->json([
             'status' => 'success',
+            'data'=>[
+                'id'=>$chat->id,
+                'is_read'=>false,
+                'conversation_id'=>$chat->conversation_id,
+                'message'=>$request->input('message')
+            ],
         ]);
     }
 }

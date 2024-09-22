@@ -32,9 +32,11 @@
                                         <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-200">
                                             Chat with <span x-text="selectedUser.name"></span>
                                         </h3>
-                                        <div class="message-thread mt-4 max-h-[500px] overflow-y-auto" x-ref="messageThread">
+                                        <div class="message-thread mt-4 max-h-[500px] overflow-y-auto"
+                                             x-ref="messageThread">
                                             <template x-for="chat in chats" :key="chat.id">
-                                                <div :class="{'text-right': chat.sender_id === authUserId, 'text-left': chat.sender_id !== authUserId}">
+                                                <div
+                                                    :class="{'text-right': chat.sender_id === authUserId, 'text-left': chat.sender_id !== authUserId}">
                                                     <p :class="{'bg-blue-500 text-white': chat.sender_id === authUserId, 'bg-gray-200 text-gray-800': chat.sender_id !== authUserId}"
                                                        class="inline-block p-2 rounded-lg my-2">
                                                         <span x-text="chat.message"></span>
@@ -73,12 +75,12 @@
     <script>
         function chatApp(authUserId) {
             return {
-                authUserId: authUserId, // Store authenticated user ID
+                authUserId: authUserId,
                 selectedUser: null,
                 chats: [],
                 newMessage: '',
                 async selectUser(id, name) {
-                    this.selectedUser = { id, name };
+                    this.selectedUser = {id, name};
                     console.log(id);
                     const baseUrl = `{{ route('get-chat', ['receiver_id' => ':id']) }}`;
                     const url = baseUrl.replace(':id', encodeURIComponent(id));
@@ -89,6 +91,8 @@
 
                         if (data.status === 'success') {
                             this.chats = data.chats;
+                            const conversation_Id = data.conversation_id;
+                            this.initEchoListener(conversation_Id)
                         } else {
                             this.chats = [];
                         }
@@ -97,6 +101,34 @@
                         this.chats = [];
                     }
                 },
+
+
+                initEchoListener(conversationId) {
+                    // Unsubscribe from previous channel if any
+                    if (this.channel) {
+                        this.channel.stopListening('NewMessageEvent');
+                        this.channel = null;
+                    }
+
+                    // Subscribe to the private channel for the current conversation
+                    this.channel = Echo.private(`new_message.${conversationId}`)
+                        .listen('NewMessageEvent', (event) => {
+                            console.log(event.id)
+                            // Check if the incoming message is for the current conversation
+                            if (this.chats.length > 0 && event.conversation_id === this.chats[0].conversation_id) {
+                                this.chats.push({
+                                    id: event.id,
+                                    conversation_id: event.conversation_id,
+                                    sender_id: event.sender_id,
+
+                                    message: event.message,
+                                });
+                                this.scrollToBottom();
+                            }
+                        });
+                },
+
+
                 async sendMessage() {
 
                     if (!this.newMessage.trim()) return;
@@ -121,22 +153,28 @@
 
                         if (data.status === 'success') {
                             // this.chats.push({
-                            //     id: data.message.id,
-                            //     sender_id: this.authUserId, // Set the sender ID to authenticated user
-                            //     message: this.newMessage
+                            //     sender_id: this.authUserId,
+                            //     id: data.data.id,
+                            //     conversation_id: data.data.conversation_id,
+                            //     message: data.data.message
                             // });
-
 
                             this.newMessage = '';
-
-                            // this.$nextTick(() => {
-                            //     this.$refs.messageThread.scrollTop = this.$refs.messageThread.scrollHeight;
-                            // });
+                            this.scrollToBottom()
                         }
+                        console.log(this.chats)
                     } catch (error) {
                         console.error('Error sending message:', error);
                     }
-                }
+                },
+
+                scrollToBottom() {
+                    this.$nextTick(() => {
+                        if (this.$refs.messageThread) {
+                            this.$refs.messageThread.scrollTop = this.$refs.messageThread.scrollHeight;
+                        }
+                    });
+                },
             }
         }
     </script>
